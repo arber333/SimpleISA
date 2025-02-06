@@ -11,6 +11,12 @@
 #include <Arduino.h>
 #include "can_common.h"
 
+// add the following define in your code to print out current, voltages and temperatures
+// #define DEBUG_ISA_DATA
+
+// add the following define to print out CAN frames sent to the IVT-S
+// #define DEBUG_ISA_OUTPUT
+
 class ISA : public CANListener
 {
 
@@ -50,8 +56,6 @@ public:
 
   double Temperature;
 
-  bool debug;
-  bool debug2;
   bool firstframe;
   int framecount;
   unsigned long timestamp;

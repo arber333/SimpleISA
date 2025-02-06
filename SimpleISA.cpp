@@ -24,8 +24,6 @@ ISA::ISA(CAN_COMMON *port, int enablePin) // Define the constructor.
   this->enablePin = enablePin;
 
   timestamp = millis();
-  debug = false;
-  debug2 = false;
   framecount = 0;
   firstframe = true;
 }
@@ -87,8 +85,9 @@ void ISA::gotFrame(CAN_FRAME *frame, int mailbox)
     break;
   }
 
-  if (debug)
-    printCAN(frame);
+#if defined(DEBUG_ISA_OUTPUT)
+  printCAN(frame);
+#endif
 }
 
 void ISA::handle521(CAN_FRAME *frame) // AMperes
@@ -101,8 +100,10 @@ void ISA::handle521(CAN_FRAME *frame) // AMperes
   milliamps = current;
   Amperes = current / 1000.0f;
 
-  if (debug2)
-    Serial << "Current: " << Amperes << " amperes " << milliamps << " ma frames:" << framecount << "\n";
+#if defined(DEBUG_ISA_DATA)
+  Serial << "Current: " << 
+  Amperes << " amperes " << milliamps << " ma frames:" << framecount << "\n";
+#endif
 }
 
 void ISA::handle522(CAN_FRAME *frame) // Voltage
@@ -128,12 +129,12 @@ void ISA::handle522(CAN_FRAME *frame) // Voltage
   if (Voltage1 > Voltage1HI && framecount > 150)
     Voltage1HI = Voltage1;
 
-  if (debug2)
-    Serial << "Voltage: " << Voltage << " vdc Voltage 1: " << Voltage1 << " vdc " << volt << " mVdc frames:" << framecount << "\n";
+  #if defined(DEBUG_ISA_DATA)
+  Serial << "Voltage: " << Voltage << " vdc Voltage 1: " << Voltage1 << " vdc " << volt << " mVdc frames:" << framecount << "\n";
+  #endif
 }
 
 void ISA::handle523(CAN_FRAME *frame) // Voltage2
-
 {
   framecount++;
   long volt = 0;
@@ -149,12 +150,12 @@ void ISA::handle523(CAN_FRAME *frame) // Voltage2
   if (Voltage2 > Voltage2HI && framecount > 150)
     Voltage2HI = Voltage2;
 
-  if (debug2)
-    Serial << "Voltage: " << Voltage << " vdc Voltage 2: " << Voltage2 << " vdc " << volt << " mVdc frames:" << framecount << "\n";
+#if defined(DEBUG_ISA_DATA)
+  Serial << "Voltage: " << Voltage << " vdc Voltage 2: " << Voltage2 << " vdc " << volt << " mVdc frames:" << framecount << "\n";
+#endif
 }
 
 void ISA::handle524(CAN_FRAME *frame) // Voltage3
-
 {
   framecount++;
   long volt = 0;
@@ -168,12 +169,12 @@ void ISA::handle524(CAN_FRAME *frame) // Voltage3
   if (Voltage3 > Voltage3HI && framecount > 150)
     Voltage3HI = Voltage3;
 
-  if (debug2)
-    Serial << "Voltage: " << Voltage << " vdc Voltage 3: " << Voltage3 << " vdc " << volt << " mVdc frames:" << framecount << "\n";
+#if defined(DEBUG_ISA_DATA)
+  Serial << "Voltage: " << Voltage << " vdc Voltage 3: " << Voltage3 << " vdc " << volt << " mVdc frames:" << framecount << "\n";
+#endif
 }
 
 void ISA::handle525(CAN_FRAME *frame) // Temperature
-
 {
   framecount++;
   long temp = 0;
@@ -181,12 +182,12 @@ void ISA::handle525(CAN_FRAME *frame) // Temperature
 
   Temperature = temp / 10;
 
-  if (debug2)
-    Serial << "Temperature: " << Temperature << " C  frames:" << framecount << "\n";
+#if defined(DEBUG_ISA_DATA)
+  Serial << "Temperature: " << Temperature << " C  frames:" << framecount << "\n";
+#endif
 }
 
 void ISA::handle526(CAN_FRAME *frame) // Kilowatts
-
 {
   framecount++;
   watt = 0;
@@ -194,8 +195,9 @@ void ISA::handle526(CAN_FRAME *frame) // Kilowatts
 
   KW = watt / 1000.0f;
 
-  if (debug2)
-    Serial << "Power: " << watt << " Watts  " << KW << " kW  frames:" << framecount << "\n";
+#if defined(DEBUG_ISA_DATA)
+  Serial << "Power: " << watt << " Watts  " << KW << " kW  frames:" << framecount << "\n";
+#endif
 }
 
 void ISA::handle527(CAN_FRAME *frame) // Ampere-Hours
@@ -208,8 +210,9 @@ void ISA::handle527(CAN_FRAME *frame) // Ampere-Hours
   AH += (As - lastAs) / 3600.0f;
   lastAs = As;
 
-  if (debug2)
-    Serial << "Amphours: " << AH << "  Ampseconds: " << As << " frames:" << framecount << "\n";
+#if defined(DEBUG_ISA_DATA)
+  Serial << "Amphours: " << AH << "  Ampseconds: " << As << " frames:" << framecount << "\n";
+#endif
 }
 
 void ISA::handle528(CAN_FRAME *frame) // kiloWatt-hours
@@ -220,8 +223,10 @@ void ISA::handle528(CAN_FRAME *frame) // kiloWatt-hours
   wh = (long)((frame->data.bytes[5] << 24) | (frame->data.bytes[4] << 16) | (frame->data.bytes[3] << 8) | (frame->data.bytes[2]));
   KWH += (wh - lastWh) / 1000.0f;
   lastWh = wh;
-  if (debug2)
-    Serial << "KiloWattHours: " << KWH << "  Watt Hours: " << wh << " frames:" << framecount << "\n";
+
+#if defined(DEBUG_ISA_DATA)
+  Serial << "KiloWattHours: " << KWH << "  Watt Hours: " << wh << " frames:" << framecount << "\n";
+#endif
 }
 
 void ISA::printCAN(CAN_FRAME *frame)
@@ -241,15 +246,14 @@ void ISA::printCAN(CAN_FRAME *frame)
           frame->data.bytes[3], frame->data.bytes[4], frame->data.bytes[5], frame->data.bytes[6], frame->data.bytes[7]);
   Serial << "Rcvd ISA frame: 0x" << bigbuffer << "\n";
 }
+
 void ISA::initialize()
 {
-
   firstframe = false;
   STOP();
   delay(700);
   for (int i = 0; i < 9; i++)
   {
-
     Serial.println("initialization \n");
 
     outframe.id = 0x411;   // Set our transmission address ID
@@ -267,8 +271,10 @@ void ISA::initialize()
 
     port->sendFrame(outframe);
 
-    if (debug)
-      printCAN(&outframe);
+#if defined(DEBUG_CAN_FRAMES)
+    printCAN(&outframe);
+#endif
+
     delay(500);
 
     sendSTORE();
@@ -283,13 +289,11 @@ void ISA::initialize()
 
 void ISA::CPLUS()
 {
-
   firstframe = false;
   STOP();
   delay(700);
   for (int i = 0; i < 9; i++)
   {
-
     Serial.println("set current plus \n");
 
     outframe.id = 0x411;   // Set our transmission address ID
@@ -307,8 +311,9 @@ void ISA::CPLUS()
 
     port->sendFrame(outframe);
 
-    if (debug)
-      printCAN(&outframe);
+#if defined(DEBUG_ISA_OUTPUT)
+    printCAN(&outframe);
+#endif
     delay(500);
 
     sendSTORE();
@@ -323,13 +328,11 @@ void ISA::CPLUS()
 
 void ISA::CMINUS()
 {
-
   firstframe = false;
   STOP();
   delay(700);
   for (int i = 0; i < 9; i++)
   {
-
     Serial.println("set current minus\n");
 
     outframe.id = 0x411;   // Set our transmission address ID
@@ -347,8 +350,9 @@ void ISA::CMINUS()
 
     port->sendFrame(outframe);
 
-    if (debug)
-      printCAN(&outframe);
+#if defined(DEBUG_ISA_OUTPUT)
+    printCAN(&outframe);
+#endif
     delay(500);
 
     sendSTORE();
@@ -363,13 +367,11 @@ void ISA::CMINUS()
 
 void ISA::VPLUS()
 {
-
   firstframe = false;
   STOP();
   delay(700);
   for (int i = 0; i < 9; i++)
   {
-
     Serial.println("set current plus \n");
 
     outframe.id = 0x411;   // Set our transmission address ID
@@ -387,8 +389,9 @@ void ISA::VPLUS()
 
     port->sendFrame(outframe);
 
-    if (debug)
-      printCAN(&outframe);
+#if defined(DEBUG_ISA_OUTPUT)
+    printCAN(&outframe);
+#endif
     delay(500);
 
     sendSTORE();
@@ -403,13 +406,11 @@ void ISA::VPLUS()
 
 void ISA::VMINUS()
 {
-
   firstframe = false;
   STOP();
   delay(700);
   for (int i = 0; i < 9; i++)
   {
-
     Serial.println("set current minus\n");
 
     outframe.id = 0x411;   // Set our transmission address ID
@@ -427,8 +428,9 @@ void ISA::VMINUS()
 
     port->sendFrame(outframe);
 
-    if (debug)
-      printCAN(&outframe);
+#if defined(DEBUG_ISA_OUTPUT)
+    printCAN(&outframe);
+#endif
     delay(500);
 
     sendSTORE();
@@ -443,7 +445,6 @@ void ISA::VMINUS()
 
 void ISA::STOP()
 {
-
   // SEND STOP///////
 
   outframe.id = 0x411;   // Set our transmission address ID
@@ -460,14 +461,12 @@ void ISA::STOP()
   outframe.data.bytes[7] = 0x00;
   port->sendFrame(outframe);
 
-  if (debug)
-  {
-    printCAN(&outframe);
-  } // If the debug variable is set, show our transmitted frame
+#if defined(DEBUG_ISA_OUTPUT)
+  printCAN(&outframe);
+#endif
 }
 void ISA::sendSTORE()
 {
-
   // SEND STORE///////
 
   outframe.id = 0x411;   // Set our transmission address ID
@@ -484,8 +483,9 @@ void ISA::sendSTORE()
   outframe.data.bytes[7] = 0x00;
   port->sendFrame(outframe);
 
-  if (debug)
-    printCAN(&outframe); // If the debug variable is set, show our transmitted frame
+#if defined(DEBUG_ISA_OUTPUT)
+  printCAN(&outframe);
+#endif
 }
 
 void ISA::START()
@@ -507,8 +507,9 @@ void ISA::START()
   outframe.data.bytes[7] = 0x00;
   port->sendFrame(outframe);
 
-  if (debug)
-    printCAN(&outframe); // If the debug variable is set, show our transmitted frame
+#if defined(DEBUG_ISA_OUTPUT)
+  printCAN(&outframe);
+#endif
 }
 
 void ISA::RESTART()
@@ -529,8 +530,9 @@ void ISA::RESTART()
   outframe.data.bytes[7] = 0x00;
   port->sendFrame(outframe);
 
-  if (debug)
-    printCAN(&outframe); // If the debug variable is set, show our transmitted frame
+#if defined(DEBUG_ISA_OUTPUT)
+  printCAN(&outframe);
+#endif
 }
 
 void ISA::deFAULT()
@@ -551,8 +553,9 @@ void ISA::deFAULT()
   outframe.data.bytes[7] = 0x00;
   port->sendFrame(outframe);
 
-  if (debug)
-    printCAN(&outframe); // If the debug variable is set, show our transmitted frame
+#if defined(DEBUG_ISA_OUTPUT)
+  printCAN(&outframe);
+#endif
 }
 
 void ISA::initCurrent()
@@ -577,8 +580,9 @@ void ISA::initCurrent()
 
   port->sendFrame(outframe);
 
-  if (debug)
-    printCAN(&outframe);
+#if defined(DEBUG_ISA_OUTPUT)
+  printCAN(&outframe);
+#endif
   delay(500);
 
   sendSTORE();
