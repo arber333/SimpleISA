@@ -1,0 +1,30 @@
+{
+  "name": "SimpleISA",
+  "version": "0.1.0",
+  "description": "A CAN library to read current, voltage, and temperature from an IVT-S current sensor",
+  "authors": [
+    {
+      "name": "Isaac Kelly",
+      "url": "https://github.com/Isaac96/SimpleISA"
+    },
+    {
+      "name": "arber333",
+      "url": "https://github.com/arber333"
+    },
+    {
+      "name": "Nishanth Samala",
+      "url": "https://github.com/outlandnish"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arber333/SimpleISA.git"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/arber333/SimpleISA",
+  "dependencies": {
+    "can_common": "~0.4.0"
+  },
+  "frameworks": "Arduino",
+  "platforms": "*"
+}
